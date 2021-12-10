@@ -54,6 +54,42 @@
   line-height: 0px;
 }
 
+#info-container .total-data {
+  border: 5px solid #222;
+  margin: 20px auto;
+}
+
+#info-container .total-data .dustStatusCountList {
+  display: flex;
+  justify-content: space-around;
+  list-style: none;
+  margin-top: 20px;
+}
+
+#info-container .total-data .dustStatusCountList li {
+  /* position: relative; */
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+}
+
+#info-container .total-data .dustStatusCountList li:not(:last-child)::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 30px;
+  background-color: #222;
+  vertical-align: bottom;
+  margin-top: 5px;
+  /* position: absolute;
+  top: 5px;
+  left: 50%; */
+}
+
+#info-container .total-data .dustStatusCountList li>* {
+  font-size: 30px;
+}
+
 #info-container .info-table {
   justify-content: center;
 }

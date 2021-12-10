@@ -32,6 +32,7 @@ block content
         contentType: 'application/json', 
         success: (result) => {
           $("#info-table > tbody").html(result);
+          dustStatusCount();
         },
         error: (err) => {
           console.log(err)
@@ -56,21 +57,62 @@ block content
               input#day(type="radio", name="time", value="18")
               | 초당 데이터
         .row
+          .col-2 ■ 기간설정
+          .col-10
+            select#setPeriod(name="setPeriod", style="width:200px", onChange="periodChange(); setPeriodForSearch()")
+              option(value="userCustom") 사용자 지정
+              option(value="year") 연간
+              option(value="quarter") 분기간
+              option(value="month") 월간
+              option(value="week") 주간
+            
+            //- 연도 선택
+            select#setYear(name="setYear", style="display:none;", onChange="weekBoxSet(); setPeriodForSearch()")
+              -for (let i = new Date().getFullYear(); i >= 1900; i--)
+                option(value=i)= i + "년"
+
+            //- 분기 선택
+            select#setQuarter(name="setQuarter", style="width:70px; display:none;" onChange="setPeriodForSearch()")
+              -for (let i = 1; i < 5; i++)
+                option(value=((3 * (i - 1) + 1) < 10 ? '0' + (3 * (i - 1) + 1) : (3 * (i - 1) + 1)) + '' + ((i * 3) < 10 ? '0' + (i * 3) : (i * 3)))= i + "분기"
+            
+            //- 월 선택
+            select#setMonth(name="setMonth", style="width:60px; display:none;", onChange="weekBoxSet(); setPeriodForSearch()") 
+              -for (let i = 1; i < 13; i++)
+                option(value=i < 10 ? '0' + i : i)= i < 10 ? '0' + i + "월" : i + "월"
+
+            //- 주차 선택
+            select#setWeek(name="setWeek", style="width:70px; display:none;", onChange="setPeriodForSearch()")
+        .row
           .col-2 ■ 조회기간
           .col-10 
             form#infoSearchForm(name="infoSearchForm", method="get")
               input#startDate(type="text", name="startDate")
               select#startTime(name="startTime")
-                -for (let i = 1; i < 25; i++)
-                  option(value=i < 10 ? '0' + i : i)= i < 10 ? '0' + i : i
+                -for (let i = 0; i < 24; i++)
+                  option(value=i < 10 ? '0' + i : i)= i < 10 ? '0' + i + "시" : i + "시"
               |  
               input#endDate(type="text", name="endDate")
               select#endTime(name="endTime")
-                -for (let i = 1; i < 25; i++)
-                  option(value=i < 10 ? '0' + i : i)= i < 10 ? '0' + i : i
+                -for (let i = 0; i < 24; i++)
+                  option(value=i < 10 ? '0' + i : i)= i < 10 ? '0' + i + "시" : i + "시"
             button.btn.btn-primary(onClick='infoSearching()') 검색
             //- button.btn.btn-primary 그래프보기
             //- button.btn.btn-primary 엑셀
+    .total-data
+      ul.dustStatusCountList
+        li
+          p#goodDust 좋음 : 
+            span#goodCount 
+        li
+          p#normalDust 보통 : 
+            span#normalCount 
+        li
+          p#badDust 나쁨 : 
+            span#badCount 
+        li
+          p#veryBadDust 매우나쁨 : 
+            span#veryBadCount 
     .row.info-table
       .col-12
         div 측정자료(수치) 
@@ -103,3 +145,216 @@ block content
         //- .print-btn
         //-   button.btn.btn-primary 인쇄  
 
+
+    script.
+      dustStatusCount();
+      weekBoxSet();
+      
+      function dustStatusCount() {
+        $('#goodCount').text($('.blue').length + "회");
+        $('#normalCount').text($('.green').length + "회");
+        $('#badCount').text($('.yellow').length + "회");
+        $('#veryBadCount').text($('.red').length + "회");
+      }
+
+      /* 해당월 주의 최대값
+      *  @param dateStr       YYYYMM    */
+      function getWeekCountOfMonth(dateStr) {
+        var year  = Number(dateStr.substring(0, 4));
+        var month = Number(dateStr.substring(4, 6));
+        
+        var nowDate =new Date(year, month-1, 1);
+    
+        var lastDate =new Date(year, month, 0).getDate();
+        var monthSWeek = nowDate.getDay();
+    
+        var weekSeq = parseInt((parseInt(lastDate) + monthSWeek - 1)/7) + 1;
+    
+        return weekSeq;
+      }
+
+      function optionValueGetter() {
+        var getSetYear = $('#setYear').val();
+        var getSetMonth = $('#setMonth').val();
+
+        var makeDate = getSetYear + getSetMonth;
+        // var makeDate = `${getSetYear}${getSetMonth}`;
+        console.log(makeDate);
+
+        return getWeekCountOfMonth(makeDate);
+      }
+
+      function weekBoxSet() {
+        console.log(optionValueGetter());
+        $("#setWeek").empty();
+        for (let i = 1; i <= optionValueGetter(); i++) {
+          var option = $("<option value=" + i + ">" + i + "주차</option>");
+          $('#setWeek').append(option);
+        }
+      }
+
+      function periodChange() {
+        var periodValue = $("#setPeriod").val();
+
+        switch (periodValue) {
+          case "userCustom" :
+            $("#setYear").css("display", "none");
+            $("#setQuarter").css("display", "none");
+            $("#setMonth").css("display", "none");
+            $("#setWeek").css("display", "none");
+
+            break;
+
+          case "year" :
+            $("#setYear").css("display", "block");
+            $("#setQuarter").css("display", "none");
+            $("#setMonth").css("display", "none");
+            $("#setWeek").css("display", "none");
+
+            break;
+
+          case "quarter" :
+            $("#setYear").css("display", "block");
+            $("#setQuarter").css("display", "block");
+            $("#setMonth").css("display", "none");
+            $("#setWeek").css("display", "none");
+
+            break;
+
+          case "month" :
+            $("#setYear").css("display", "block");
+            $("#setQuarter").css("display", "none");
+            $("#setMonth").css("display", "block");
+            $("#setWeek").css("display", "none");
+
+            break;
+
+          case "week" :
+            $("#setYear").css("display", "block");
+            $("#setQuarter").css("display", "none");
+            $("#setMonth").css("display", "block");
+            $("#setWeek").css("display", "block");
+
+            break;
+          
+          default :
+            console.log("Period Set Change Value Error... " + periodValue);
+            break;
+        }
+      }
+
+      function quarterCheck() {
+        console.log($('#setQuarter').val());
+      }
+
+      function setPeriodForSearch() {
+        var periodType = $('#setPeriod').val();
+        var getYear = $('#setYear').val();
+        var startDate;
+        var endDate;
+
+        switch(periodType) {
+          case "year" :
+            startDate = ymdSlash(getYear + '0101');
+            endDate = ymdSlash(getYear + '1231');
+
+            console.log(startDate);
+            console.log(endDate);
+
+            $('#startDate').val(startDate);
+            $('#endDate').val(endDate);
+            $('#endTime').val(23);
+
+            break;
+
+          case "quarter" :
+            var getQuarter = $('#setQuarter').val();
+            var startQuarter = getQuarter.substring(0, 2);
+            var endQuarter = getQuarter.substring(2, 4);
+            var lastDay = new Date(getYear, endQuarter.substring(0, 1) == '0' ? endQuarter.substring(1, 2) : endQuarter, 0);
+
+            startDate = ymdSlash(getYear + startQuarter + '01');
+            endDate = ymdSlash(getYear + endQuarter + lastDay.getDate());
+
+            console.log(startDate);
+            console.log(endDate);
+
+            $('#startDate').val(startDate);
+            $('#endDate').val(endDate);
+            $('#endTime').val(23);
+
+            break;
+
+          case "month" :
+            var getMonth = $('#setMonth').val();
+            var lastDay = new Date(getYear, getMonth.substring(0, 1) == '0' ? getMonth.substring(1, 2) : getMonth, 0);
+
+            startDate = ymdSlash(getYear + getMonth + '01');
+            endDate = ymdSlash(getYear + getMonth + lastDay.getDate());
+
+            console.log(startDate);
+            console.log(endDate);
+
+            $('#startDate').val(startDate);
+            $('#endDate').val(endDate);
+            $('#endTime').val(23);
+
+            break;
+
+          case "week" :
+            var getMonth = $('#setMonth').val();
+            var getWeek = $('#setWeek').val();
+            var getDay = 7 * (getWeek - 1) + 1;
+
+            var vn_day1 = new Date( getYear, getMonth - 1, (getDay < 10 ? '0' + getDay : getDay)); //구하고자 하는 날짜 설정
+
+            var i = vn_day1.getDay(); // 현재 요일을 구한다. ( 0:일요일, 1:월요일, 2:화요일, 3:수요일, 4:목요일, 5:금요일, 6:토요일 )
+
+            var aa = 0 - i;
+            var bb = 6 - i;
+
+            // 입력받은 날짜의 해당 Week의 월요일의 날짜와 토요일의 날짜
+            var Cal_st = new Date( vn_day1.getFullYear(), vn_day1.getMonth(), vn_day1.getDate() + aa );
+            var Cal_en = new Date( vn_day1.getFullYear(), vn_day1.getMonth(), vn_day1.getDate() + bb );
+
+            // YYYY-MM-DD(YYYYMMDD)
+            startDate = ymdSlash(DateFormat(Cal_st));
+            endDate = ymdSlash(DateFormat(Cal_en));
+
+            console.log(startDate);
+            console.log(endDate);
+
+            $('#startDate').val(startDate);
+            $('#endDate').val(endDate);
+            $('#endTime').val(23);
+
+            break;
+          
+          default :
+            console.log("Custom Period... " + periodType);
+            break;
+        }
+      }
+
+      function DateFormat(obj) { // 날짜를 YYYYMMDD 형식으로 변경하는 함수
+        // Year
+        var yy = obj.getFullYear();
+        // Month
+        var mm = obj.getMonth() + 1 < 10 ? '0' + (obj.getMonth() + 1) : obj.getMonth() + 1;
+        // Day
+        var dd = obj.getDate() < 10 ? '0' + obj.getDate() : obj.getDate();
+
+        var date = '' + yy + mm + dd;
+
+        return date;
+      }
+
+      function ymdSlash(obj) { // 날짜를 YYYY-MM-DD 형식으로 변경하는 함수
+        var year = obj.substring(0, 4);
+        var month = obj.substring(4, 6);
+        var day = obj.substring(6, 8);
+
+        date = year + '-' + month + '-' + day;
+
+        return date;
+      }
