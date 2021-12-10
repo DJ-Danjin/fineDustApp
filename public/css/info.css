@@ -67,7 +67,6 @@
 }
 
 #info-container .total-data .dustStatusCountList li {
-  /* position: relative; */
   display: flex;
   justify-content: space-around;
   width: 100%;
@@ -81,9 +80,6 @@
   background-color: #222;
   vertical-align: bottom;
   margin-top: 5px;
-  /* position: absolute;
-  top: 5px;
-  left: 50%; */
 }
 
 #info-container .total-data .dustStatusCountList li>* {
