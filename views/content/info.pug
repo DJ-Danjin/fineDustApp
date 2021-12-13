@@ -91,25 +91,22 @@ block content
       /* 해당월 주의 최대값
       *  @param dateStr       YYYYMM    */
       function getWeekCountOfMonth(dateStr) {
-        let year  = Number(dateStr.substring(0, 4));
+        let year = Number(dateStr.substring(0, 4));
         let month = Number(dateStr.substring(4, 6));
-        
-        let nowDate =new Date(year, month-1, 1);
-    
-        let lastDate =new Date(year, month, 0).getDate();
+        let nowDate = new Date(year, month - 1, 1);
+        let lastDate = new Date(year, month, 0).getDate();
         let monthSWeek = nowDate.getDay();
-    
-        let weekSeq = parseInt((parseInt(lastDate) + monthSWeek - 1)/7) + 1;
+        let weekSeq = parseInt((parseInt(lastDate) + monthSWeek - 1) / 7) + 1;
     
         return weekSeq;
       }
 
       function optionValueGetter() {
-        let getSetYear = $('#setYear').val();
-        let getSetMonth = $('#setMonth').val();
+        const getSetYear = $('#setYear').val();
+        const getSetMonth = $('#setMonth').val();
 
-        let makeDate = getSetYear + getSetMonth;
-        // let makeDate = `${getSetYear}${getSetMonth}`;
+        //- let makeDate = getSetYear + getSetMonth;
+        let makeDate = `${getSetYear}${getSetMonth}`;
         console.log(makeDate);
 
         return getWeekCountOfMonth(makeDate);
@@ -181,16 +178,18 @@ block content
       function setPeriodForSearch() {
         let periodType = $('#setPeriod').val();
         let getYear = $('#setYear').val();
+        let getMonth = $('#setMonth').val();
         let startDate;
         let endDate;
+        let lastDay;
 
         switch(periodType) {
           case "year" :
-            startDate = ymdSlash(getYear + '0101');
-            endDate = ymdSlash(getYear + '1231');
+            startDate = moment(`${getYear}0101`);
+            endDate = moment(`${getYear}1231`);
 
-            console.log(startDate);
-            console.log(endDate);
+            console.log("moment Test... " + startDate.format('YYYY-MM-DD'));
+            console.log("moment Test... " + endDate.format('YYYY-MM-DD'));
 
             updateValue(startDate, endDate);
 
@@ -198,56 +197,72 @@ block content
 
           case "quarter" :
             let getQuarter = $('#setQuarter').val();
-            let startQuarter = getQuarter.substring(0, 2);
-            let endQuarter = getQuarter.substring(2, 4);
-            let lastDay = new Date(getYear, endQuarter.substring(0, 1) == '0' ? endQuarter.substring(1, 2) : endQuarter, 0);
+            //- let startQuarter = getQuarter.substring(0, 2);
+            //- let endQuarter = getQuarter.substring(2, 4);
+            //- lastDay = new Date(getYear, endQuarter.substring(0, 1) == '0' ? endQuarter.substring(1, 2) : endQuarter, 0);
 
-            startDate = ymdSlash(getYear + startQuarter + '01');
-            endDate = ymdSlash(getYear + endQuarter + lastDay.getDate());
+            let startQuarter = moment(`${getYear}${getQuarter}`, 'YYYYQ').format('YYYYMM');
+            let endQuarter = moment(`${getYear}${getQuarter}`, 'YYYYQ').add(2, 'M').format('YYYYMM');
+            lastDay = moment(endQuarter).daysInMonth();
 
-            console.log(startDate);
-            console.log(endDate);
+            //- startDate = ymdSlash(getYear + startQuarter + '01');
+            //- endDate = ymdSlash(getYear + endQuarter + lastDay.getDate());
+
+            startDate = moment(`${startQuarter}01`);
+            endDate = moment(`${endQuarter}${lastDay}`);
+
+            //- console.log(startDate);
+            //- console.log(endDate);
+
+            console.log("moment Test... " + startDate.format('YYYY-MM-DD'));
+            console.log("moment Test... " + endDate.format('YYYY-MM-DD'));
 
             updateValue(startDate, endDate);
 
             break;
 
           case "month" :
-            let getMonth = $('#setMonth').val();
-            let lastDay = new Date(getYear, getMonth.substring(0, 1) == '0' ? getMonth.substring(1, 2) : getMonth, 0);
+            //- lastDay = new Date(getYear, getMonth.substring(0, 1) == '0' ? getMonth.substring(1, 2) : getMonth, 0);
+            let yearMonth = `${getYear}${getMonth}`;
+            lastDay = moment(yearMonth).daysInMonth();
 
-            startDate = ymdSlash(getYear + getMonth + '01');
-            endDate = ymdSlash(getYear + getMonth + lastDay.getDate());
+            //- startDate = ymdSlash(getYear + getMonth + '01');
+            //- endDate = ymdSlash(getYear + getMonth + lastDay.getDate());
 
-            console.log(startDate);
-            console.log(endDate);
+            startDate = moment(`${yearMonth}01`);
+            endDate = moment(`${yearMonth}${lastDay}`);
+
+            console.log("Moment Test... " + startDate.format('YYYY-MM-DD'));
+            console.log("Moment Test... " + endDate.format('YYYY-MM-DD'));
 
             updateValue(startDate, endDate);
 
             break;
 
           case "week" :
-            let getMonth = $('#setMonth').val();
             let getWeek = $('#setWeek').val();
             let getDay = 7 * (getWeek - 1) + 1;
-
             let calDate = new Date( getYear, getMonth - 1, (getDay < 10 ? '0' + getDay : getDay)); //구하고자 하는 날짜 설정
-
             let calDay = calDate.getDay(); // 현재 요일을 구한다. ( 0:일요일, 1:월요일, 2:화요일, 3:수요일, 4:목요일, 5:금요일, 6:토요일 )
 
             let calStartDayNum = 0 - calDay;
             let calEndDayNum = 6 - calDay;
 
             // 입력받은 날짜의 해당 Week의 월요일의 날짜와 토요일의 날짜
-            let calStartDay = new Date( calDate.getFullYear(), calDate.getMonth(), calDate.getDate() + calStartDayNum );
-            let calEndDay = new Date( calDate.getFullYear(), calDate.getMonth(), calDate.getDate() + calEndDayNum );
+            let calStartDay = new Date(calDate.getFullYear(), calDate.getMonth(), calDate.getDate() + calStartDayNum);
+            let calEndDay = new Date(calDate.getFullYear(), calDate.getMonth(), calDate.getDate() + calEndDayNum);
 
             // YYYY-MM-DD(YYYYMMDD)
-            startDate = ymdSlash(DateFormat(calStartDay));
-            endDate = ymdSlash(DateFormat(calEndDay));
+            //- startDate = ymdSlash(dateFormat(calStartDay));
+            //- endDate = ymdSlash(dateFormat(calEndDay));
+            startDate = moment(calStartDay);
+            endDate = moment(calEndDay);
 
-            console.log(startDate);
-            console.log(endDate);
+            //- console.log(startDate);
+            //- console.log(endDate);
+
+            console.log("Moment Test... " + moment(calStartDay).format('YYYY-MM-DD'));
+            console.log("Moment Test... " + moment(calEndDay).format('YYYY-MM-DD'));
 
             updateValue(startDate, endDate);
 
@@ -259,32 +274,32 @@ block content
         }
       }
 
-      function DateFormat(obj) { // 날짜를 YYYYMMDD 형식으로 변경하는 함수
-        // Year
-        let takeYear = obj.getFullYear();
-        // Month
-        let takeMonth = obj.getMonth() + 1 < 10 ? '0' + (obj.getMonth() + 1) : obj.getMonth() + 1;
-        // Day
-        let takeDay = obj.getDate() < 10 ? '0' + obj.getDate() : obj.getDate();
+      //- function dateFormat(obj) { // 날짜를 YYYYMMDD 형식으로 변경하는 함수
+      //-   // Year
+      //-   let takeYear = obj.getFullYear();
+      //-   // Month
+      //-   let takeMonth = obj.getMonth() + 1 < 10 ? '0' + (obj.getMonth() + 1) : obj.getMonth() + 1;
+      //-   // Day
+      //-   let takeDay = obj.getDate() < 10 ? '0' + obj.getDate() : obj.getDate();
 
-        let date = '' + takeYear + takeMonth + takeDay;
+      //-   let date = '' + takeYear + takeMonth + takeDay;
 
-        return date;
-      }
+      //-   return date;
+      //- }
 
-      function ymdSlash(obj) { // 날짜를 YYYY-MM-DD 형식으로 변경하는 함수
-        let year = obj.substring(0, 4);
-        let month = obj.substring(4, 6);
-        let day = obj.substring(6, 8);
+      //- function ymdSlash(obj) { // 날짜를 YYYY-MM-DD 형식으로 변경하는 함수
+      //-   let year = obj.substring(0, 4);
+      //-   let month = obj.substring(4, 6);
+      //-   let day = obj.substring(6, 8);
 
-        date = year + '-' + month + '-' + day;
+      //-   date = year + '-' + month + '-' + day;
 
-        return date;
-      }
+      //-   return date;
+      //- }
 
       function updateValue(start, end) { // 조회기간 업데이트 함수
-        $('#startDate').val(start);
-        $('#endDate').val(end);
+        $('#startDate').val(start.format('YYYY-MM-DD'));
+        $('#endDate').val(end.format('YYYY-MM-DD'));
         $('#startTime').val('00');
         $('#endTime').val(23);
 
