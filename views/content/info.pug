@@ -104,16 +104,12 @@ block content
       function optionValueGetter() {
         const getSetYear = $('#setYear').val();
         const getSetMonth = $('#setMonth').val();
-
-        //- let makeDate = getSetYear + getSetMonth;
         let makeDate = `${getSetYear}${getSetMonth}`;
-        console.log(makeDate);
 
         return getWeekCountOfMonth(makeDate);
       }
 
       function weekBoxSet() {
-        console.log(optionValueGetter());
         $("#setWeek").empty();
         for (let i = 1; i <= optionValueGetter(); i++) {
           let option = $("<option value=" + i + ">" + i + "주차</option>");
@@ -171,25 +167,16 @@ block content
         }
       }
 
-      function quarterCheck() {
-        console.log($('#setQuarter').val());
-      }
-
       function setPeriodForSearch() {
-        let periodType = $('#setPeriod').val();
-        let getYear = $('#setYear').val();
-        let getMonth = $('#setMonth').val();
-        let startDate;
-        let endDate;
-        let lastDay;
+        const periodType = $('#setPeriod').val();
+        const getYear = $('#setYear').val();
+        const getMonth = $('#setMonth').val();
+        let startDate, endDate, lastDay;
 
         switch(periodType) {
           case "year" :
             startDate = moment(`${getYear}0101`);
             endDate = moment(`${getYear}1231`);
-
-            console.log("moment Test... " + startDate.format('YYYY-MM-DD'));
-            console.log("moment Test... " + endDate.format('YYYY-MM-DD'));
 
             updateValue(startDate, endDate);
 
@@ -197,43 +184,22 @@ block content
 
           case "quarter" :
             let getQuarter = $('#setQuarter').val();
-            //- let startQuarter = getQuarter.substring(0, 2);
-            //- let endQuarter = getQuarter.substring(2, 4);
-            //- lastDay = new Date(getYear, endQuarter.substring(0, 1) == '0' ? endQuarter.substring(1, 2) : endQuarter, 0);
-
             let startQuarter = moment(`${getYear}${getQuarter}`, 'YYYYQ').format('YYYYMM');
             let endQuarter = moment(`${getYear}${getQuarter}`, 'YYYYQ').add(2, 'M').format('YYYYMM');
             lastDay = moment(endQuarter).daysInMonth();
 
-            //- startDate = ymdSlash(getYear + startQuarter + '01');
-            //- endDate = ymdSlash(getYear + endQuarter + lastDay.getDate());
-
             startDate = moment(`${startQuarter}01`);
             endDate = moment(`${endQuarter}${lastDay}`);
-
-            //- console.log(startDate);
-            //- console.log(endDate);
-
-            console.log("moment Test... " + startDate.format('YYYY-MM-DD'));
-            console.log("moment Test... " + endDate.format('YYYY-MM-DD'));
 
             updateValue(startDate, endDate);
 
             break;
 
           case "month" :
-            //- lastDay = new Date(getYear, getMonth.substring(0, 1) == '0' ? getMonth.substring(1, 2) : getMonth, 0);
             let yearMonth = `${getYear}${getMonth}`;
             lastDay = moment(yearMonth).daysInMonth();
-
-            //- startDate = ymdSlash(getYear + getMonth + '01');
-            //- endDate = ymdSlash(getYear + getMonth + lastDay.getDate());
-
             startDate = moment(`${yearMonth}01`);
             endDate = moment(`${yearMonth}${lastDay}`);
-
-            console.log("Moment Test... " + startDate.format('YYYY-MM-DD'));
-            console.log("Moment Test... " + endDate.format('YYYY-MM-DD'));
 
             updateValue(startDate, endDate);
 
@@ -252,17 +218,8 @@ block content
             let calStartDay = new Date(calDate.getFullYear(), calDate.getMonth(), calDate.getDate() + calStartDayNum);
             let calEndDay = new Date(calDate.getFullYear(), calDate.getMonth(), calDate.getDate() + calEndDayNum);
 
-            // YYYY-MM-DD(YYYYMMDD)
-            //- startDate = ymdSlash(dateFormat(calStartDay));
-            //- endDate = ymdSlash(dateFormat(calEndDay));
             startDate = moment(calStartDay);
             endDate = moment(calEndDay);
-
-            //- console.log(startDate);
-            //- console.log(endDate);
-
-            console.log("Moment Test... " + moment(calStartDay).format('YYYY-MM-DD'));
-            console.log("Moment Test... " + moment(calEndDay).format('YYYY-MM-DD'));
 
             updateValue(startDate, endDate);
 
@@ -274,34 +231,14 @@ block content
         }
       }
 
-      //- function dateFormat(obj) { // 날짜를 YYYYMMDD 형식으로 변경하는 함수
-      //-   // Year
-      //-   let takeYear = obj.getFullYear();
-      //-   // Month
-      //-   let takeMonth = obj.getMonth() + 1 < 10 ? '0' + (obj.getMonth() + 1) : obj.getMonth() + 1;
-      //-   // Day
-      //-   let takeDay = obj.getDate() < 10 ? '0' + obj.getDate() : obj.getDate();
-
-      //-   let date = '' + takeYear + takeMonth + takeDay;
-
-      //-   return date;
-      //- }
-
-      //- function ymdSlash(obj) { // 날짜를 YYYY-MM-DD 형식으로 변경하는 함수
-      //-   let year = obj.substring(0, 4);
-      //-   let month = obj.substring(4, 6);
-      //-   let day = obj.substring(6, 8);
-
-      //-   date = year + '-' + month + '-' + day;
-
-      //-   return date;
-      //- }
-
       function updateValue(start, end) { // 조회기간 업데이트 함수
         $('#startDate').val(start.format('YYYY-MM-DD'));
         $('#endDate').val(end.format('YYYY-MM-DD'));
         $('#startTime').val('00');
         $('#endTime').val(23);
+        
+        console.log(`Start Date...${start.format('YYYY-MM-DD')}`);
+        console.log(`End Date...${end.format('YYYY-MM-DD')}`);
 
         return 0;
       }
