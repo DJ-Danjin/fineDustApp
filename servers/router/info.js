@@ -55,19 +55,6 @@ router.get('/', (req, res, next) => {
     LIMIT 30
   `;
 
-  // const dustData = `
-  //   SELECT COUNT(case when pm10_0<=30 then 1 else 0 END) AS goodDust10_0,
-  //          COUNT(IF(pm10_0<=30, 1, 0)) AS goodDust10_0,
-	// 	       COUNT(case when pm2_5<=15 then 1 END) AS goodDust2_5,
-  //          COUNT(case when pm10_0>30 then 1 END AND case when pm10_0<=80 then 1 END) AS normalDust10_0,
-  //          COUNT(case when pm2_5>15 then 1 end AND case when pm2_5<=35 then 1 end) AS normalDust2_5,
-  //          COUNT(case when pm10_0>80 then 1 END AND case when pm10_0<=150 then 1 END) AS badDust10_0,
-  //          COUNT(case when pm2_5>35 then 1 end AND case when pm2_5<=75 then 1 end) AS badDust2_5,
-  //          COUNT(case when pm10_0>150 then 1 END AND case when pm10_0<=600 then 1 END) AS veryBadDust10_0,
-  //          COUNT(case when pm2_5>75 then 1 end AND case when pm2_5<=500 then 1 end) AS veryBadDust2_5
-  //     FROM finedust_tb
-  // `;
-  // + dustData
   connection.query(query, (err, rows, fields) => {
     if (!err) {
       res.render('content/info', {'datas': rows.map(data => {
@@ -81,14 +68,6 @@ router.get('/', (req, res, next) => {
                                               temperature: data.temperature,
                                               humidity: data.humidity,
                                               rgst_dt: moment(data.rgst_dt).format('MM-DD : HH')
-                                              // ,goodDust10_0: data.goodDust10_0,
-                                              // goodDust2_5: data.goodDust2_5,
-                                              // normalDust10_0: data.normalDust10_0,
-                                              // normalDust2_5: data.normalDust2_5,
-                                              // badDust10_0: data.badDust10_0,
-                                              // badDust2_5: data.badDust2_5,
-                                              // veryBadDust10_0: data.veryBadDust10_0,
-                                              // veryBadDust2_5: data.veryBadDust2_5
                                             }
                                           })
                                   });
@@ -115,22 +94,10 @@ router.get('/api/search', (req, res, next) => {
            rgst_dt 
     FROM finedust_tb WHERE rgst_dt >= '${start}' AND rgst_dt <= '${end}' 
     GROUP BY SUBSTR(rgst_dt, 1, ${params.time}) 
-    ORDER BY rgst_dt DESC 
+    ORDER BY rgst_dt DESC
+    LIMIT 30
   `;
 
-  // const dustData = `
-  //     SELECT COUNT(case when pm10_0<=30 then 1 END) AS goodDust10_0,
-  //           COUNT(case when pm2_5<=15 then 1 END) AS goodDust2_5,
-  //           COUNT(case when pm10_0>30 then 1 END AND case when pm10_0<=80 then 1 END) AS normalDust10_0,
-  //           COUNT(case when pm2_5>15 then 1 end AND case when pm2_5<=35 then 1 end) AS normalDust2_5,
-  //           COUNT(case when pm10_0>80 then 1 END AND case when pm10_0<=150 then 1 END) AS badDust10_0,
-  //           COUNT(case when pm2_5>35 then 1 end AND case when pm2_5<=75 then 1 end) AS badDust2_5,
-  //           COUNT(case when pm10_0>150 then 1 END AND case when pm10_0<=600 then 1 END) AS veryBadDust10_0,
-  //           COUNT(case when pm2_5>75 then 1 end AND case when pm2_5<=500 then 1 end) AS veryBadDust2_5
-  //       FROM finedust_tb WHERE rgst_dt >= '${start}' AND rgst_dt <= '${end}'
-  //   `;
-
-  // + dustData
   connection.query(query, (err, rows, fields) => {
     if (!err) {
       let result;
@@ -155,31 +122,72 @@ router.get('/api/search', (req, res, next) => {
         result += html;
       });
 
-      // rows.forEach(data => {
-      //   $("p.goodDust").text(data.goodDust);
-      //   $("p.normalDust").text(data.normalDust);
-      //   $("p.badDust").text(data.badDust);
-      //   $("p.veryBadDust").text(data.veryBadDust);
+      res.send(result);
+    }
+    else {
+      console.log(err);
+      res.send(err);
+    }
+  })
+})
 
-      //   const html = `
-      //     <p class="goodDust">${data.goodDust}</p>
-      //     <p class="normalDust">${data.normalDust}</p>
-      //     <p class="badDust">${data.badDust}</p>
-      //     <p class="veryBadDust">${data.veryBadDust}</p>
-      //   `
-      //   result += html;
-      // });
+router.get('/api/searchforCount', (req, res, next) => {
+  const params = req.query;
+  const start = `${params.startDate} ${params.startTime}:00:00`;
+  const end = `${params.endDate} ${params.endTime}:00:00`;
+  
+  const query = `
+    SELECT pm10_0 AS pm100,
+            pm2_5 AS pm25,
+            rgst_dt
+    FROM finedust_tb
+    WHERE rgst_dt >= '${start}' AND rgst_dt <= '${end}'
+    ORDER BY rgst_dt DESC
+  `;
+
+  connection.query(query, (err, rows, fields) => {
+    if (!err) {
+      let result;
+      let goodCount = 0, normalCount = 0, badCount = 0, veryBadCount = 0;
+
+      rows.forEach(data => {
+        if (`${data.pm100}` <= 30) {
+          goodCount++;
+        } else if (`${data.pm100}` > 30 && `${data.pm100}` <= 80) {
+          normalCount++;
+        } else if (`${data.pm100}` > 80 && `${data.pm100}` <= 150) {
+          badCount++;
+        } else if (`${data.pm100}` > 150 && `${data.pm100}` <= 600) {
+          veryBadCount++;
+        }
+
+        if (`${data.pm25}` <= 15) {
+          goodCount++;
+        } else if (`${data.pm25}` > 15 && `${data.pm25}` <= 35) {
+          normalCount++;
+        } else if (`${data.pm25}` > 35 && `${data.pm25}` <= 75) {
+          badCount++;
+        } else if (`${data.pm25}` > 75 && `${data.pm25}` <= 500) {
+          veryBadCount++;
+        }
+      });
+
+      result = `
+        <li>
+          <p id="goodDust"> 좋음 : <span id="goodCount">${goodCount}</span>회</p>
+        </li>
+        <li>
+          <p id="normalDust"> 보통 : <span id="normalCount">${normalCount}</span>회</p>
+        </li>
+        <li>
+          <p id="badDust"> 나쁨 : <span id="badCount">${badCount}</span>회</p>
+        </li>
+        <li>
+          <p id="veryBadDust"> 매우나쁨 : <span id="veryBadCount">${veryBadCount}</span>회</p>
+        </li>
+      `
 
       res.send(result);
-
-      // var good = document.getElementsByClassName('blue').length;
-      // document.getElementById("goodCount").innerText = good + "회";
-      // var normal = document.getElementsByClassName('green').length;
-      // document.getElementById("normalCount").innerText = normal + "회";
-      // var bad = document.getElementsByClassName('yellow').length;
-      // document.getElementById("badCount").innerText = bad + "회";
-      // var veryBad = document.getElementsByClassName('red').length;
-      // document.getElementById("veryBadCount").innerText = veryBad + "회";
     }
     else {
       console.log(err);

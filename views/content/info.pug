@@ -35,7 +35,32 @@ block content
         contentType: 'application/json', 
         success: (result) => {
           $("#info-table > tbody").html(result);
-          dustStatusCount();
+          //- dustStatusCount();
+          dustCount();
+        },
+        error: (err) => {
+          console.log(err)
+        }
+      })
+    }
+
+    const dustCount = () => {
+      const getFormData = document.getElementById("infoSearchForm");
+
+      $.ajax({
+        data: {
+          'time': $("[name=time]:checked").val(),
+          'startDate': getFormData.startDate.value,
+          'startTime': getFormData.startTime.value,
+          'endDate': getFormData.endDate.value,
+          'endTime': getFormData.endTime.value,
+        }, 
+        type: 'get', 
+        dataType : 'html', 
+        url: "/info/api/searchforCount", 
+        contentType: 'application/json', 
+        success: (result) => {
+          $(".dustStatusCountList").html(result);
         },
         error: (err) => {
           console.log(err)
