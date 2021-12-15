@@ -3,6 +3,8 @@ const router = express.Router();
 const moment = require('moment');
 const connection = require("../connection");
 
+let goodCount = 0, normalCount = 0, badCount = 0, veryBadCount = 0;
+
 const getDustStatus = (value) => {
   if (value <= 30) {
     return 'blue'
@@ -36,6 +38,36 @@ const getUltraFineDustStatus = (value) => {
   }
   else {
     return 'blue'
+  }
+}
+
+const countDustStatus = (value) => {
+  if (value <= 30) {
+    goodCount++;
+  } 
+  else if (value > 30 && value <= 80) {
+    normalCount++;
+  }
+  else if (value > 80 && value <= 150) {
+    badCount++;
+  }
+  else if (value > 150 && value <= 600) {
+    veryBadCount++;
+  }
+}
+
+const countUltraFineDustStatus = (value) => {
+  if (value <= 15) {
+    goodCount++;
+  } 
+  else if (value > 15 && value <= 35) {
+    normalCount++;
+  }
+  else if (value > 35 && value <= 75) {
+    badCount++;
+  }
+  else if (value > 75 && value <= 500) {
+    veryBadCount++;
   }
 }
 
@@ -131,6 +163,50 @@ router.get('/api/search', (req, res, next) => {
   })
 })
 
+router.get('/api/totalCount', (req, res, next) => {
+  const query = `
+    SELECT pm10_0 AS pm100,
+            pm2_5 AS pm25,
+            rgst_dt
+    FROM finedust_tb
+    ORDER BY rgst_dt DESC
+  `;
+
+  connection.query(query, (err, rows, fields) => {
+    if (!err) {
+      let result;
+      goodCount = 0, normalCount = 0, badCount = 0, veryBadCount = 0;
+
+      rows.forEach(data => {
+        countDustStatus(`${data.pm100}`);
+        countUltraFineDustStatus(`${data.pm25}`);
+      });
+
+      result = `
+        <li>
+          <p id="goodDust"> 좋음 : <span id="goodCount">${goodCount}</span>회</p>
+        </li>
+        <li>
+          <p id="normalDust"> 보통 : <span id="normalCount">${normalCount}</span>회</p>
+        </li>
+        <li>
+          <p id="badDust"> 나쁨 : <span id="badCount">${badCount}</span>회</p>
+        </li>
+        <li>
+          <p id="veryBadDust"> 매우나쁨 : <span id="veryBadCount">${veryBadCount}</span>회</p>
+        </li>
+      `
+
+      res.send(result);
+    }
+    else {
+      console.log(err);
+      res.send(err);
+    }
+  })
+})
+
+
 router.get('/api/searchforCount', (req, res, next) => {
   const params = req.query;
   const start = `${params.startDate} ${params.startTime}:00:00`;
@@ -148,28 +224,11 @@ router.get('/api/searchforCount', (req, res, next) => {
   connection.query(query, (err, rows, fields) => {
     if (!err) {
       let result;
-      let goodCount = 0, normalCount = 0, badCount = 0, veryBadCount = 0;
+      goodCount = 0, normalCount = 0, badCount = 0, veryBadCount = 0;
 
       rows.forEach(data => {
-        if (`${data.pm100}` <= 30) {
-          goodCount++;
-        } else if (`${data.pm100}` > 30 && `${data.pm100}` <= 80) {
-          normalCount++;
-        } else if (`${data.pm100}` > 80 && `${data.pm100}` <= 150) {
-          badCount++;
-        } else if (`${data.pm100}` > 150 && `${data.pm100}` <= 600) {
-          veryBadCount++;
-        }
-
-        if (`${data.pm25}` <= 15) {
-          goodCount++;
-        } else if (`${data.pm25}` > 15 && `${data.pm25}` <= 35) {
-          normalCount++;
-        } else if (`${data.pm25}` > 35 && `${data.pm25}` <= 75) {
-          badCount++;
-        } else if (`${data.pm25}` > 75 && `${data.pm25}` <= 500) {
-          veryBadCount++;
-        }
+        countDustStatus(`${data.pm100}`);
+        countUltraFineDustStatus(`${data.pm25}`);
       });
 
       result = `
